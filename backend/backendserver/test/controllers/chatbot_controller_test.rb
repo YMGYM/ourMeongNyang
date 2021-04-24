@@ -6,13 +6,13 @@ class ChatbotControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should get request" do
-    get chatbot_request_url
+  test "should get create" do
+    get chatbot_create_url
     assert_response :success
   end
 
-  test "should get callback" do
-    get chatbot_callback_url
+  test "should get show" do
+    get chatbot_show_url
     assert_response :success
   end
 end
