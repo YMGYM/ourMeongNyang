@@ -10,7 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_23_061245) do
+ActiveRecord::Schema.define(version: 2021_04_24_084759) do
+
+  create_table "acceptusers", charset: "utf8mb4", force: :cascade do |t|
+    t.integer "user_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
 
   create_table "images", charset: "utf8mb4", force: :cascade do |t|
     t.string "link"

@@ -1,0 +1,2 @@
+class Acceptuser < ApplicationRecord
+end
