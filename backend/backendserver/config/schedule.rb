@@ -1,11 +1,11 @@
-require 'net/http'
-# 5 + 9시 10분에 작업 수행
-# every :day, at: '5:10 am' do
-#     ...
-# end
-
-every 1.minute do
-   runner "require 'net/http'"
-   runner "uri = URI('https://swm-chatbot-9gsxzg-cydssl.run.goorm.io/chatbot/show')"
-   runner "res = Net::HTTP.post_form(uri, 'q'=>{})"
+# 하루 두 번 작업 수행
+every 1.day, at: ['09:00 am', '06:00 pm'] do
+    ENV.each { |k, v| env(k, v) } # 환경 세팅
+    rake "chatbot:send_image", :environment => "development" # lib/task/chatbot.rake
 end
+
+# 디버깅용 1분마다
+# every 1.minutes do
+#    ENV.each { |k, v| env(k, v) } # 환경 세팅
+#    rake "chatbot:send_image", :environment => "development" # lib/task/chatbot.rake
+# end

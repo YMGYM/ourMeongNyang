@@ -61,6 +61,11 @@ Rails.application.configure do
   # routes, locales, etc. This feature depends on the listen gem.
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
   config.hosts << "swm-chatbot-9gsxzg-cydssl.run.goorm.io"
+    
+  config.hosts << ".localhost"
+  config.hosts << "api.kakaowork.com"
+  config.hosts << "meongnyang.space"
+  # config.hosts << "#{`hostname -s`.strip}.local"
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
 end
