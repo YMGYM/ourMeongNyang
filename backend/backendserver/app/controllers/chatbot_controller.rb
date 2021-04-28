@@ -60,18 +60,22 @@ class ChatbotController < ApplicationController
 			user_id_list.push(u["user_id"])
 		end
 		
+        
 		chat_room_ids = make_chat_room_ids(user_id_list, @@conversation_open_uri)
-		send_message(chat_room_ids, @@send_message_uri)
+		send_message(chat_room_ids, @@send_message_uri, 'img')
 		
+        render :json => {
+			'content': "successfully sent to users",
+		}.to_json
 	end # end of show
 
 
 	def accept # 이미지 다음 이미지를 받을 유저인지 확인 후 저장
 		accept_user = Acceptuser.find_by(user_id: params["react_user_id"].to_i)
 		
-		if accept_user.present? and !params["receive"]
+		if accept_user.present? and params["value"] == 'FALSE'
 			accept_user.destroy
-		elsif !accept_user.present? and params["receive"]
+		elsif !accept_user.present? and params["value"] == 'TRUE'
 			Acceptuser.create("user_id" => params["react_user_id"].to_i)
 		end
 		
@@ -131,16 +135,15 @@ class ChatbotController < ApplicationController
 	end # end of make_chat_room_ids
 	
 	def send_message(chat_room_ids, send_message_uri, msgType)
-		
+		puts "hsdf"
         images = Image.all
-        selected_img = images.sample().link
+        selected_img = images.sample()
 		
 		chat_room_ids.each do |id|
 			# 각 채팅방 id 마다 메세지 전송
 			send_message_req = Net::HTTP::Post.new(send_message_uri)
 			send_message_req[:Authorization] = @@authorization_key
 			send_message_req["Content-type"] = "application/json"
-			
 			Net::HTTP.start(send_message_uri.hostname, send_message_uri.port, :use_ssl => send_message_uri.scheme == 'https') { |http|
                 if msgType == 'img'
                     http.request(send_message_req, body=imgmsg(id, selected_img))
@@ -163,17 +166,24 @@ class ChatbotController < ApplicationController
 			},
 			{
 			  "type": "image_link",
-			  "url": img
+			  "url": img.link
 			},
 			{
 			  "type": "description",
 			  "term": "사연",
 			  "content": {
 				"type": "text",
-				"text": "유기견 주워서 키웠습니다. 아주 이쁩니다.",
+				"text": img.summary,
 				"markdown": true
 			  },
 			  "accent": true
+			},
+			{
+			  "type": "button",
+			  "text": "크게 보기",
+			  "style": "default",
+			  "action_type": "open_system_browser",
+			  "value": img.link,  
 			},
 			{
 			  "type": "button",
@@ -187,7 +197,7 @@ class ChatbotController < ApplicationController
 			},
 			{
 			  "type": "text",
-			  "text": "*다음 사진도 받으시겠습니까?* \n (총 3번의 사진을 받을 수 있습니다.)",
+			  "text": "*다음 사진도 받으시겠습니까?* \n (매일 아침 9시, 저녁 6시에 전송됩니다.)",
 			  "markdown": true
 			},
 			{
@@ -222,7 +232,7 @@ class ChatbotController < ApplicationController
 			"blocks": [
 				{
 				  "type": "text",
-				  "text": "*감사합니다.*🐱 🐶",
+				  "text": "*처리되었습니다. 감사합니다.*🐱 🐶",
 				  "markdown": true
 				}
 			]
