@@ -54,7 +54,7 @@ class ChatbotController < ApplicationController
 		
 		# 모든 유저 DB에 저장
 		user_id_list.each {	|user_id|
-			Acceptuser.create("user_id" => user_id.to_i) if !Acceptuser.find(user_id.to_i).present?
+			Acceptuser.create("user_id" => user_id.to_i) if !Acceptuser.find_by(user_id: user_id.to_i).present?
 		}
 		
 		# 2. 각 유저들의 대화방 id 만들기
@@ -166,10 +166,9 @@ class ChatbotController < ApplicationController
             images = Image.all
             images.each {|i| i.update(isSent: false)}
         end
+        
         selected_img = images.sample()
-		puts "================================line 167"
-		puts selected_img
-		
+
 		chat_room_ids.each do |id|
 			# 각 채팅방 id 마다 메세지 전송
 			send_message_req = Net::HTTP::Post.new(send_message_uri)
@@ -225,7 +224,7 @@ class ChatbotController < ApplicationController
 			},
 			{
 			  "type": "text",
-			  "text": "*다음 사진도 받으시겠습니까?* \n (제보받은 사진 중, 매일 아침 9시, 저녁 6시에 전송됩니다.)",
+			  "text": "*구독 설정 바꾸기* \n (매일 9~21시 정각에 제보받은 사진 중 랜덤으로 전송됩니다!)",
 			  "markdown": true
 			},
 			{
@@ -233,7 +232,7 @@ class ChatbotController < ApplicationController
 			  "elements": [
 				{
 				  "type": "button",
-				  "text": "네",
+				  "text": "계속받기",
 				  "style": "primary",
 				  "action_type": "submit_action",
 				  "action_name": "TRUE",
@@ -241,7 +240,7 @@ class ChatbotController < ApplicationController
 				},
 				{
 				  "type": "button",
-				  "text": "아니오",
+				  "text": "그만받기",
 				  "style": "danger",
 				  "action_type": "submit_action",
 				  "action_name": "FALSE",
