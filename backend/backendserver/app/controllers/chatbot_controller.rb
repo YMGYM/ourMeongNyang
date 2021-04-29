@@ -18,27 +18,53 @@ class ChatbotController < ApplicationController
   	def index
       
 		# 1. 사용자 정보 받아오기
-		get_users_req = Net::HTTP::Get.new(@@get_users_uri)
+		get_users_req = Net::HTTP::Get.new(@@get_users_uri + '?limit=100')
 		get_users_req[:Authorization] = @@authorization_key
 		
 		# user_id_list > user_id 들 저장
 		user_id_list = []
-		JSON.parse(
+		
+		result = JSON.parse(
 			Net::HTTP.start(@@get_users_uri.hostname, @@get_users_uri.port, :use_ssl => @@get_users_uri.scheme == 'https') { |http| 
 				http.request(get_users_req) 
 			}.body
-		)["users"].each{ |user| 
-			user_id_list.push(user["id"].to_i)
+		)
+		
+		# 커서가 없을 때 까지 반복
+		while result["cursor"] != nil or result["users"] != nil
+			
+			result["users"].each{ |user| 
+				user_id_list.push(user["id"].to_i)
+			}
+			
+			if result["cursor"] == nil 
+				break
+			end
+			
+			cursor = '?cursor=' + result['cursor']
+			get_users_req_cursor = Net::HTTP::Get.new(@@get_users_uri + cursor)
+			get_users_req_cursor[:Authorization] = @@authorization_key
+
+			result = JSON.parse(
+				Net::HTTP.start(@@get_users_uri.hostname, @@get_users_uri.port, :use_ssl => @@get_users_uri.scheme == 'https') { |http| 
+					http.request(get_users_req_cursor) 
+				}.body
+			)
+		end
+		
+		# 모든 유저 DB에 저장
+		user_id_list.each {	|user_id|
+			Acceptuser.create("user_id" => user_id.to_i) if !Acceptuser.find(user_id.to_i).present?
 		}
 		
-		# 2. 각 유저들의 대화방 id 만들기, 리팩토링 완료
+		# 2. 각 유저들의 대화방 id 만들기
 		chat_room_ids = make_chat_room_ids(user_id_list, @@conversation_open_uri)
 
-		# 3. 대화방 id 마다 메세지 날리기, 리팩토링 완료
+		# 3. 대화방 id 마다 메세지 날리기
 		send_message(chat_room_ids, @@send_message_uri, 'img')
-
+		
 		render :json => {
-			'content': "successfully sent to all users",
+			'content': "successfully sent to all users"
 		}
 		
 	end	# end of def index
@@ -60,7 +86,6 @@ class ChatbotController < ApplicationController
 			user_id_list.push(u["user_id"])
 		end
 		
-        
 		chat_room_ids = make_chat_room_ids(user_id_list, @@conversation_open_uri)
 		send_message(chat_room_ids, @@send_message_uri, 'img')
 		
@@ -135,9 +160,15 @@ class ChatbotController < ApplicationController
 	end # end of make_chat_room_ids
 	
 	def send_message(chat_room_ids, send_message_uri, msgType)
-		puts "hsdf"
-        images = Image.all
+        images = Image.where(isSent: false)
+        
+        if images.length == 0
+            images = Image.all
+            images.each {|i| i.update(isSent: false)}
+        end
         selected_img = images.sample()
+		puts "================================line 167"
+		puts selected_img
 		
 		chat_room_ids.each do |id|
 			# 각 채팅방 id 마다 메세지 전송
@@ -147,6 +178,8 @@ class ChatbotController < ApplicationController
 			Net::HTTP.start(send_message_uri.hostname, send_message_uri.port, :use_ssl => send_message_uri.scheme == 'https') { |http|
                 if msgType == 'img'
                     http.request(send_message_req, body=imgmsg(id, selected_img))
+                    selected_img.update(isSent: true)
+                    
                 else
                     http.request(send_message_req, body=response_msg(id))
                 end
@@ -159,11 +192,6 @@ class ChatbotController < ApplicationController
           "conversation_id": conversation_id,
 		  "text": "멍냥 사진이 도착했습니다.",
 		  "blocks": [
-			{
-			  "type": "header",
-			  "text": "멍냥 사진",
-			  "style": "blue"
-			},
 			{
 			  "type": "image_link",
 			  "url": img.link
@@ -190,14 +218,14 @@ class ChatbotController < ApplicationController
 			  "text": "멍냥 사진 자랑하러 가기",
 			  "style": "default",
 			  "action_type": "open_system_browser",
-			  "value": "https://www.naver.com"
+			  "value": "https://meongnyang.space/"
 			},
 			{
 			  "type": "divider"
 			},
 			{
 			  "type": "text",
-			  "text": "*다음 사진도 받으시겠습니까?* \n (매일 아침 9시, 저녁 6시에 전송됩니다.)",
+			  "text": "*다음 사진도 받으시겠습니까?* \n (제보받은 사진 중, 매일 아침 9시, 저녁 6시에 전송됩니다.)",
 			  "markdown": true
 			},
 			{

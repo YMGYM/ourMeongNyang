@@ -21,6 +21,7 @@ ActiveRecord::Schema.define(version: 2021_04_24_084759) do
   create_table "images", charset: "utf8mb4", force: :cascade do |t|
     t.string "link"
     t.text "summary"
+    t.boolean "isSent"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end

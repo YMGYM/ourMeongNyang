@@ -22,5 +22,7 @@ Rails.application.routes.draw do
     # 모달 보내기
     post 'request' => 'chatbot#closeup'
     
+    # 특정 이미지 삭제(for 배포)
+    delete 'chatbot/deleteImage' => 'chatbot#deleteImage'
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
 end
