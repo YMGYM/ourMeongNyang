@@ -189,7 +189,7 @@ class ChatbotController < ApplicationController
     def imgmsg(conversation_id, img)
         {
           "conversation_id": conversation_id,
-		  "text": "멍냥 사진이 도착했습니다.",
+		  "text": "[2팀 우리멍냥]\n멍냥 사진이 도착했습니다!",
 		  "blocks": [
 			{
 			  "type": "image_link",
