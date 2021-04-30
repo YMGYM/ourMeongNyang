@@ -137,6 +137,16 @@ class ChatbotController < ApplicationController
 		}
     end
     
+    def deleteImage
+        image = Image.find(params["id"])
+        if image.present?
+            image.destroy
+        end
+        
+        render :json => {
+			'data': "successfully destroyed",
+		}
+    end
     
     private
     def make_chat_room_ids(user_id_list, conversation_open_uri)
